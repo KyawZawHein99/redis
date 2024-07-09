@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Real-Time Chat</title>
+    <script src="/webjars/sockjs-client/1.2.1/sockjs.min.js"></script>
+    <script src="/webjars/stomp-websocket/2.3.3/stomp.min.js"></script>
+    <script type="text/javascript">
+        var stompClient = null;
+
+        function connect() {
+            var socket = new SockJS('/ws');
+            stompClient = Stomp.over(socket);
+            stompClient.connect({}, function (frame) {
+                console.log('Connected: ' + frame);
+                stompClient.subscribe('/topic/messages', function (message) {
+                    showMessage(JSON.parse(message.body));
+                });
+            });
+        }
+
+        function showMessage(message) {
+            var messageArea = document.getElementById('messageArea');
+            var newMessage = document.createElement('div');
+            newMessage.appendChild(document.createTextNode(message.sender + ': ' + message.content));
+            messageArea.appendChild(newMessage);
+        }
+
+        function sendMessage() {
+            var sender = document.getElementById('sender').value;
+            var content = document.getElementById('content').value;
+            var message = { sender: sender, content: content };
+            stompClient.send('/app/chat', {}, JSON.stringify(message));
+            document.getElementById('content').value = '';
+        }
+    </script>
+</head>
+<body onload="connect()">
+    <div id="messageArea"></div>
+    <input type="text" id="sender" placeholder="Your Name"><br>
+    <textarea id="content" placeholder="Type your message"></textarea><br>
+    <button onclick="sendMessage()">Send</button>
+</body>
+</html>
