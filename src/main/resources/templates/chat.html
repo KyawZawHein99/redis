@@ -1,44 +1,56 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <title>Real-Time Chat</title>
-    <script src="/webjars/sockjs-client/1.2.1/sockjs.min.js"></script>
-    <script src="/webjars/stomp-websocket/2.3.3/stomp.min.js"></script>
+    <!-- Use CDN links for SockJS and STOMP libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
     <script type="text/javascript">
-        var stompClient = null;
+      var stompClient = null;
 
-        function connect() {
-            var socket = new SockJS('/ws');
-            stompClient = Stomp.over(socket);
-            stompClient.connect({}, function (frame) {
-                console.log('Connected: ' + frame);
-                stompClient.subscribe('/topic/messages', function (message) {
-                    showMessage(JSON.parse(message.body));
-                });
-            });
-        }
+      function connect() {
+        var socket = new SockJS("/ws");
+        stompClient = Stomp.over(socket);
+        stompClient.connect({}, function (frame) {
+          console.log("Connected: " + frame);
+          stompClient.subscribe("/topic/messages", function (message) {
+            showMessage(JSON.parse(message.body));
+          });
+        });
+      }
 
-        function showMessage(message) {
-            var messageArea = document.getElementById('messageArea');
-            var newMessage = document.createElement('div');
-            newMessage.appendChild(document.createTextNode(message.sender + ': ' + message.content));
-            messageArea.appendChild(newMessage);
-        }
+      function showMessage(message) {
+        var messageArea = document.getElementById("messageArea");
+        var newMessage = document.createElement("div");
+        newMessage.appendChild(
+          document.createTextNode(message.sender + ": " + message.content)
+        );
+        messageArea.appendChild(newMessage);
+      }
 
-        function sendMessage() {
-            var sender = document.getElementById('sender').value;
-            var content = document.getElementById('content').value;
-            var message = { sender: sender, content: content };
-            stompClient.send('/app/chat', {}, JSON.stringify(message));
-            document.getElementById('content').value = '';
+      function sendMessage() {
+        var sender = document.getElementById("sender").value.trim();
+        var content = document.getElementById("content").value.trim();
+
+        if (sender && content) {
+          var message = { sender: sender, content: content };
+          stompClient.send("/app/chat", {}, JSON.stringify(message));
+          document.getElementById("content").value = "";
+        } else {
+          alert("Please enter a sender name and message content.");
         }
+      }
     </script>
-</head>
-<body onload="connect()">
-    <div id="messageArea"></div>
-    <input type="text" id="sender" placeholder="Your Name"><br>
-    <textarea id="content" placeholder="Type your message"></textarea><br>
-    <button onclick="sendMessage()">Send</button>
-</body>
+  </head>
+  <body onload="connect()">
+    <div id="messageArea">
+      <!-- This is where incoming and outgoing messages will be displayed -->
+    </div>
+    <div>
+      <input type="text" id="sender" placeholder="Your Name" />
+      <textarea id="content" placeholder="Type your message"></textarea>
+      <button onclick="sendMessage()">Send</button>
+    </div>
+  </body>
 </html>
